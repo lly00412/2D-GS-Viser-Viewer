@@ -164,6 +164,7 @@ class ViewerRenderer:
                     render_type2: str="render", 
                     ):
         def get_result(results, type):
+            # TODO: if has uncertainty, need to update here
             if type in results.keys():
                 return results[type]
             elif type == 'curvature':
