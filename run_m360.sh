@@ -1,9 +1,9 @@
 #!/bin/bash
 
 CUDA_VISIBLE_DEVICES=0
-DATA_DIR=/mnt/Data2/nerf_datasets/nerf_synthetic/
+DATA_DIR=/mnt/Data2/nerf_datasets/m360/
 
-python train_w_viewer.py -s $DATA_DIR/mic -m output/nerf_synthetic/mic
+python train_w_viewer.py -s $DATA_DIR/garden -m output/m360/garden
 
 # To view the results：
 # 2D-GS-Viser-Viewer
