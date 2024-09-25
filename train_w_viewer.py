@@ -45,6 +45,7 @@ class Trainer:
         self.viser_viewer = Viewer(args = args,
                                     model_paths = exp_path, 
                                     source_path = src_path,
+                                    host=args.host,
                                     no_edit_panel = True,
                                     no_render_panel = True,
                                     is_training = True,
@@ -104,7 +105,7 @@ class Trainer:
             image, viewspace_point_tensor, visibility_filter, radii = render_pkg["render"], render_pkg["viewspace_points"], render_pkg["visibility_filter"], render_pkg["radii"]
             
             gt_image = viewpoint_cam.original_image.cuda()
-            gt_mask = viewpoint_cam.gt_mask.cuda()
+            # gt_mask = viewpoint_cam.gt_mask.cuda()
 
             Ll1 = l1_loss(image, gt_image)
             loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image))
@@ -272,8 +273,8 @@ if __name__ == "__main__":
     lp = ModelParams(parser)
     op = OptimizationParams(parser)
     pp = PipelineParams(parser)
-    parser.add_argument('--ip', type=str, default="127.0.0.1")
-    parser.add_argument('--port', type=int, default=6009)
+    parser.add_argument('--host', type=str, default="127.0.0.1")
+    parser.add_argument('--port', type=int, default=8080)
     parser.add_argument('--detect_anomaly', action='store_true', default=False)
     parser.add_argument("--test_iterations", nargs="+", type=int, default=[7_000, 30_000])
     parser.add_argument("--save_iterations", nargs="+", type=int, default=[7_000, 30_000])

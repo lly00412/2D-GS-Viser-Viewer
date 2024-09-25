@@ -504,7 +504,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("model_paths", type=str, nargs="+")
     parser.add_argument("--source_path", "-s", type=str, default="")
-    parser.add_argument("--host", "-a", type=str, default="0.0.0.0")
+    parser.add_argument("--host", "-a", type=str, default="127.0.0.1")
     parser.add_argument("--port", "-p", type=int, default=8080)
     parser.add_argument("--background_color", "-b",
                         type=str, nargs="+", default=["gray"],
