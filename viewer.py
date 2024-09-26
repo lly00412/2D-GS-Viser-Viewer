@@ -13,14 +13,14 @@ import threading
 import warnings 
 warnings.filterwarnings('ignore')
 current_dir = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(current_dir, '2d_gaussian_splatting'))
+sys.path.append(os.path.join(current_dir, 'StopThePop'))
 
 from pathlib import Path
-from argparse import ArgumentParser
+from argparse import ArgumentParser,Namespace
 from typing import Tuple, Literal, List
 from viser.theme import TitlebarButton, TitlebarConfig, TitlebarImage
 
-from arguments import ModelParams, PipelineParams, get_combined_args
+from arguments import ModelParams, PipelineParams, SplattingSettings,get_combined_args
 from internal.viewer import ViewerRenderer, ClientThread
 from internal.viewer import GaussianModelforViewer as GaussianModel
 from internal.viewer.ui import RenderPanel, TransformPanel, EditPanel
@@ -30,7 +30,9 @@ DROPDOWN_USE_DIRECT_APPEARANCE_EMBEDDING_VALUE = "@Direct"
 class Viewer:
     def __init__(
             self,
-            args, 
+            args,
+            pipe,
+            splat_args,
             model_paths: str,
             source_path: str = '',
             host: str = "0.0.0.0",
@@ -53,18 +55,13 @@ class Viewer:
             is_training: bool = False,
     ):
         self.render_type_name = {
-            "RGB": 'render', 
-            "Edge": 'edge',
-            "Alpha": 'rend_alpha', 
-            "Normal": 'rend_normal', 
-            "View-Normal": 'view_normal',
-            "Depth": 'surf_depth',
-            "Depth-Distort": 'rend_dist',
-            "Depth-to-Normal": 'surf_normal',
-            "Depth-to-Curvature": 'curvature',
+            "RGB": 'render',
+            "Depth": 'depth',
             "None": 'render',
         }
-        self.args = args 
+        self.args = args
+        self.pipe = pipe
+        self.splat_args = splat_args
         self.model_paths = model_paths[0]
         self.source_path = source_path
         self.cameras_json = os.path.join(self.model_paths, "cameras.json") if cameras_json is None else cameras_json
@@ -107,7 +104,7 @@ class Viewer:
             print(f'[INFO] ply path loaded from: {self.ply_path}')
             self.gaussian_model.load_ply(self.ply_path)
             print(f'[INFO] number of points: {self.gaussian_model._xyz.shape[0]}')
-        self.viewer_renderer = ViewerRenderer(self.gaussian_model, self.background_color, not self.is_training)
+        self.viewer_renderer = ViewerRenderer(self.gaussian_model, self.pipe,self.background_color,self.splat_args, not self.is_training)
 
     def _init_scene_camera_transform(self, cameras_json_path, mode, up):
         transform = torch.eye(4, dtype=torch.float)
@@ -149,7 +146,7 @@ class Viewer:
         self.gaussian_model._rotation = new_gaussians._rotation.clone().detach()
         self.gaussian_model._features_dc = new_gaussians._features_dc.clone().detach()
         self.gaussian_model._features_rest = new_gaussians._features_rest.clone().detach()
-        self.viewer_renderer = ViewerRenderer(self.gaussian_model, self.background_color, self.is_training)
+        self.viewer_renderer = ViewerRenderer(self.gaussian_model, self.pipe,self.background_color,self.splat_args, self.is_training)
 
     def get_gpu_memory_usage(self):
         total_memory = torch.cuda.memory_allocated() + torch.cuda.memory_reserved() 
@@ -502,6 +499,8 @@ class Viewer:
 
 if __name__ == "__main__":
     parser = ArgumentParser()
+    pp = PipelineParams(parser)
+    ss = SplattingSettings(parser)
     parser.add_argument("model_paths", type=str, nargs="+")
     parser.add_argument("--source_path", "-s", type=str, default="")
     parser.add_argument("--host", "-a", type=str, default="127.0.0.1")
@@ -551,5 +550,5 @@ if __name__ == "__main__":
 
     # create viewer
     viewer_init_args = {key: getattr(args, key) for key in vars(args)}
-    viewer = Viewer(args, **viewer_init_args)
+    viewer = Viewer(args,pp.extract(args), ss.get_settings(args), **viewer_init_args)
     viewer.start()

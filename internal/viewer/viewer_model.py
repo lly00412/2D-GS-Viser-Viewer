@@ -1,6 +1,5 @@
 import torch
-import numpy as np 
-
+import numpy as np
 import internal.utils.gaussian_utils as gaussian_utils
 from scene import GaussianModel
 
